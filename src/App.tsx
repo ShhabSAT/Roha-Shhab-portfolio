@@ -15,6 +15,7 @@ import { ServicesSection } from './components/ServicesSection';
 import { CredentialsSection } from './components/CredentialsSection';
 import Footer from './components/Footer';
 import { ProjectModal } from './components/ProjectModal';
+import { LuxuryScrollRail } from './components/LuxuryScrollRail';
 import type { ProjectItem } from './data/portfolioData';
 
 gsap.registerPlugin(ScrollTrigger);
@@ -90,6 +91,9 @@ export const App: React.FC = () => {
 
       {/* Fixed Editorial Header */}
       <Navbar />
+
+      {/* Bespoke antique-gold scroll rail (hidden behind the dossier modal) */}
+      <LuxuryScrollRail hidden={Boolean(selectedProject)} />
 
       {/* Main Page Flow */}
       <main className="min-h-screen w-full bg-[#2D0608] text-[#EFE5D1]">

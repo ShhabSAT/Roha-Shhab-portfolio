@@ -161,7 +161,7 @@ export const Hero: React.FC = () => {
   return (
     <section
       ref={heroRef}
-      className="relative min-h-screen w-full bg-crimson-canvas overflow-hidden flex flex-col justify-between pt-28 pb-8 md:pb-12 px-6 md:px-14 select-none"
+      className="relative min-h-screen w-full bg-crimson-canvas overflow-hidden flex flex-col justify-end md:justify-between pt-28 pb-12 px-6 md:px-14 select-none"
     >
       {/* Art-Directed Museum Painting Backdrop */}
       <div
@@ -179,30 +179,40 @@ export const Hero: React.FC = () => {
           draggable={false}
           fetchPriority="high"
           decoding="async"
-          className="absolute inset-0 w-full h-full object-cover object-[68%_24%] md:object-[72%_26%] md:translate-x-[7%] opacity-80 select-none"
+          className="absolute inset-0 w-full h-full object-cover object-[72%_18%] md:object-[72%_26%] md:translate-x-[7%] opacity-80 select-none"
         />
 
-        {/* Layer B — Editorial Readability & Candlelight Vignette */}
+        {/* Layer B — Editorial Readability & Candlelight Vignette (desktop) */}
         <div
-          className="absolute inset-0"
+          className="hidden md:block absolute inset-0"
           style={{
             background:
               'linear-gradient(90deg, #1E0405 0%, #1E0405 14%, rgba(36, 5, 6, 0.94) 42%, rgba(45, 6, 8, 0.42) 70%, rgba(24, 3, 4, 0.58) 100%)',
           }}
         />
         <div
-          className="absolute inset-0"
+          className="hidden md:block absolute inset-0"
           style={{
             background:
               'linear-gradient(180deg, rgba(24, 3, 4, 0.72) 0%, transparent 25%, transparent 72%, #1C0405 100%)',
           }}
         />
-        {/* Mobile-only bottom-up crimson scrim keeps the type razor sharp */}
+        {/* Mobile warm crimson wash — grades the classical sky into the velvet
+            palette so the cover reads as one image, never a blue void. */}
         <div
           className="absolute inset-0 md:hidden"
           style={{
             background:
-              'linear-gradient(180deg, transparent 28%, rgba(28, 4, 5, 0.74) 62%, #1C0405 100%)',
+              'linear-gradient(180deg, rgba(40, 6, 8, 0.46) 0%, rgba(36, 5, 7, 0.32) 38%, rgba(30, 4, 5, 0.52) 72%, rgba(28, 4, 5, 0.78) 100%)',
+          }}
+        />
+        {/* Mobile-only bottom-up crimson vignette keeps the type razor sharp
+            while letting the classical painting read as a magazine cover. */}
+        <div
+          className="absolute inset-0 md:hidden"
+          style={{
+            background:
+              'linear-gradient(180deg, rgba(28, 4, 5, 0.45) 0%, rgba(28, 4, 5, 0.28) 38%, rgba(26, 4, 5, 0.88) 72%, #1C0405 100%)',
           }}
         />
       </div>
@@ -211,7 +221,7 @@ export const Hero: React.FC = () => {
       <BaroqueCorner
         corner="tl"
         tone="gold"
-        className="absolute top-6 left-6 md:top-8 md:left-10 opacity-55 z-10"
+        className="hidden md:block absolute top-6 left-6 md:top-8 md:left-10 opacity-55 z-10"
       />
       <BaroqueCorner
         corner="br"
@@ -222,7 +232,7 @@ export const Hero: React.FC = () => {
       {/* Main Content Area */}
       <div
         ref={contentRef}
-        className="relative z-10 w-full max-w-7xl mx-auto flex-1 flex flex-col justify-center my-auto py-8"
+        className="relative z-10 w-full max-w-7xl mx-auto flex flex-none md:flex-1 flex-col justify-center my-0 md:my-auto py-4 md:py-8"
       >
         {/* Top Micro-label Row */}
         <div className="flex items-center gap-3 text-[10px] md:text-[11px] font-sans font-medium uppercase tracking-[0.24em] text-[#C8A86B] mb-6 md:mb-8">

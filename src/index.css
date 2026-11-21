@@ -47,6 +47,23 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* Bespoke gold scroll rail replaces the native browser scrollbar everywhere,
+   including scrollable modal cards, while preserving full scrollability. */
+html,
+body,
+* {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+html::-webkit-scrollbar,
+body::-webkit-scrollbar,
+*::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
 /* Editorial utility classes */
 .font-serif-editorial {
   font-family: 'Cormorant Garamond', Georgia, serif;

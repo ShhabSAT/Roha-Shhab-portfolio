@@ -115,19 +115,8 @@ export const HexagonDrumShowcase: React.FC<HexagonDrumShowcaseProps> = ({
 
   const [activeIndex, setActiveIndex] = useState(0);
   const [inDrumMode, setInDrumMode] = useState(false);
-  const [isMobile, setIsMobile] = useState(() =>
-    typeof window !== 'undefined' ? window.innerWidth < 768 : false
-  );
 
   const scrollTriggerRef = useRef<ScrollTrigger | null>(null);
-
-  useEffect(() => {
-    const mq = window.matchMedia('(max-width: 767px)');
-    const onChange = () => setIsMobile(mq.matches);
-    onChange();
-    mq.addEventListener('change', onChange);
-    return () => mq.removeEventListener('change', onChange);
-  }, []);
 
   // Luxurious timing: hold the open hexagon, then a slow 700px unwrap into the 3D portrait drum
   const hexHoldPx = 120;
@@ -137,7 +126,6 @@ export const HexagonDrumShowcase: React.FC<HexagonDrumShowcaseProps> = ({
   const pinDistance = morphEndPx + maxIdx * pixelsPerCard;
 
   useEffect(() => {
-    if (isMobile) return;
     const section = sectionRef.current;
     const stage = stageRef.current;
     if (!section || !stage) return;
@@ -226,19 +214,32 @@ export const HexagonDrumShowcase: React.FC<HexagonDrumShowcaseProps> = ({
         setActiveIndex(roundedIdx);
       }
 
-      // Generous upright 3:4 center card size on drum
+      // Generous upright 3:4 center card size on drum (smart portrait scaling on phones)
+      const isNarrow = metrics.stageW < 768;
       const baseCardH = 312;
-      const fitScale = Math.min(1.16, (metrics.stageH * 0.65) / baseCardH);
+      const fitScale = isNarrow
+        ? Math.min(
+            1.08,
+            (metrics.stageW * 0.72) / 234,
+            (metrics.stageH * 0.58) / 312
+          )
+        : Math.min(1.16, (metrics.stageH * 0.65) / baseCardH);
       const renderedCardH = baseCardH * fitScale;
 
       // Bigger, bolder horizontal Hexagon tiles — exact trig guarantees ZERO corner overlap & wide center space
-      const hexUnit = Math.min(metrics.stageH, metrics.stageW * 0.72);
-      const hexScaleX = (hexUnit * 0.322) / 234;
-      const hexScaleY = (hexUnit * 0.222) / 312;
-      const hexRadius = hexUnit * 0.395;
+      const hexUnit = isNarrow
+        ? Math.min(metrics.stageW * 0.94, metrics.stageH * 0.86)
+        : Math.min(metrics.stageH, metrics.stageW * 0.72);
+      const hexScaleX = isNarrow
+        ? (hexUnit * 0.30) / 234
+        : (hexUnit * 0.322) / 234;
+      const hexScaleY = isNarrow
+        ? (hexUnit * 0.21) / 312
+        : (hexUnit * 0.222) / 312;
+      const hexRadius = isNarrow ? hexUnit * 0.37 : hexUnit * 0.395;
 
       // Proportional 3D drum spacing (~34px crisp air gap between cards on any screen)
-      const drumRadius = renderedCardH * 0.95;
+      const drumRadius = renderedCardH * (isNarrow ? 0.86 : 0.95);
       const extraGap = renderedCardH * 0.03;
       const exitCurtain = 1 - smoothstep(0.18, 0.95, exitT);
 
@@ -336,7 +337,7 @@ export const HexagonDrumShowcase: React.FC<HexagonDrumShowcaseProps> = ({
       st.kill();
       scrollTriggerRef.current = null;
     };
-  }, [items.length, pinDistance, maxIdx, isMobile]);
+  }, [items.length, pinDistance, maxIdx]);
 
   const jumpToCard = (idx: number) => {
     const st = scrollTriggerRef.current;
@@ -346,47 +347,6 @@ export const HexagonDrumShowcase: React.FC<HexagonDrumShowcaseProps> = ({
   };
 
   const activeProject = items[activeIndex] ?? items[0];
-
-  if (isMobile) {
-    return (
-      <section
-        id="signature-works"
-        className="bg-parchment-paper text-[#1E0707] relative w-full py-20 px-6 border-t border-[#1E0707]/15"
-      >
-        <p className="text-[10px] tracking-[0.24em] uppercase text-[#9E4224] mb-1.5">
-          03 / EDITORIAL &amp; SEASONAL
-        </p>
-        <h2 className="font-serif-editorial text-4xl font-light leading-none text-[#1E0707] mb-8">
-          Editorial <span className="italic text-[#5C1110]">Series</span>
-        </h2>
-
-        <div className="grid grid-cols-2 gap-4">
-          {items.map((project, idx) => (
-            <button
-              key={project.id}
-              type="button"
-              onClick={() => onSelectProject(project)}
-              className="text-left group"
-            >
-              <div className="aspect-[3/4] w-full border border-[#C8A86B]/50 overflow-hidden bg-[#220405] mb-2.5">
-                <DrumCardFace project={project} roman={ROMAN[idx] ?? String(idx + 1)} />
-              </div>
-              {project.coverImage && (
-                <>
-                  <p className="text-[9px] tracking-[0.18em] uppercase text-[#9E4224]">
-                    {project.subTag}
-                  </p>
-                  <p className="font-serif-editorial text-lg leading-tight text-[#1E0707]">
-                    {project.title}
-                  </p>
-                </>
-              )}
-            </button>
-          ))}
-        </div>
-      </section>
-    );
-  }
 
   return (
     <section
@@ -503,6 +463,27 @@ export const HexagonDrumShowcase: React.FC<HexagonDrumShowcaseProps> = ({
             </div>
           </div>
         ))}
+      </div>
+
+      {/* Compact mobile drum caption — crisp parchment plate above the scroll pill */}
+      <div
+        aria-hidden={!inDrumMode}
+        className={`lg:hidden pointer-events-none absolute bottom-[84px] left-0 right-0 z-30 px-6 flex justify-center transition-opacity duration-500 ${
+          inDrumMode ? 'opacity-100' : 'opacity-0'
+        }`}
+      >
+        <div className="w-full max-w-[340px] bg-[#EFE5D1]/95 border border-[#C8A86B]/45 px-4 py-2.5 text-center">
+          <span className="block text-[9px] tracking-[0.24em] uppercase text-[#9E4224] mb-1">
+            {String(activeIndex + 1).padStart(2, '0')} /{' '}
+            {String(items.length).padStart(2, '0')}
+          </span>
+          <p className="font-serif-editorial text-[19px] leading-tight text-[#1E0707]">
+            {activeProject.title}
+          </p>
+          <p className="text-[9px] tracking-[0.18em] uppercase text-[#1E0707]/60 mt-1">
+            {activeProject.client}
+          </p>
+        </div>
       </div>
 
       {/* Bottom Scroll Hint */}

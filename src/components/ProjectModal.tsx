@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { X, ChevronLeft, ChevronRight, ExternalLink, Film } from 'lucide-react';
 import type { ProjectItem } from '../data/portfolioData';
 import { BaroqueCorner } from './BaroqueOrnaments';
+import { lockSmoothScroll, unlockSmoothScroll } from './SmoothScroll';
 
 interface ProjectModalProps {
   project: ProjectItem | null;
@@ -36,10 +37,10 @@ export const ProjectModal: React.FC<ProjectModalProps> = ({
         }
       }
     };
-    document.body.style.overflow = 'hidden';
+    lockSmoothScroll();
     window.addEventListener('keydown', handleKey);
     return () => {
-      document.body.style.overflow = '';
+      unlockSmoothScroll();
       window.removeEventListener('keydown', handleKey);
     };
   }, [project, onClose]);
@@ -61,12 +62,14 @@ export const ProjectModal: React.FC<ProjectModalProps> = ({
       role="dialog"
       aria-modal="true"
       aria-label={`${project.title} project dossier`}
+      data-lenis-prevent
       className="fixed inset-0 z-[200] flex items-center justify-center p-4 md:p-8 bg-[#120203]/90"
       onClick={onClose}
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="relative w-full max-w-5xl max-h-[90vh] overflow-y-auto bg-parchment-paper text-[#1E0707] border border-[#C8A86B]/50 shadow-[0_35px_90px_rgba(0,0,0,0.75)]"
+        data-lenis-prevent
+        className="relative w-full max-w-5xl max-h-[90vh] overflow-y-auto overscroll-contain bg-parchment-paper text-[#1E0707] border border-[#C8A86B]/50 shadow-[0_35px_90px_rgba(0,0,0,0.75)]"
       >
         {/* Top Modal Header Bar */}
         <div className="sticky top-0 z-20 flex items-center justify-between px-6 md:px-10 py-4 bg-[#EFE5D1]/95 border-b border-[#1E0707]/15">

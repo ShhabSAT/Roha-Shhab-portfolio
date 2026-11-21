@@ -6,6 +6,66 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 gsap.registerPlugin(ScrollTrigger);
 
 let activeLenis: Lenis | null = null;
+let scrollLockDepth = 0;
+let previousHtmlOverflow = '';
+let previousBodyOverflow = '';
+
+/**
+ * Hard-lock the page behind the project modal: stop Lenis, freeze native
+ * overflow on both html and body, and remember the pre-lock values so the
+ * unlock restores the smooth-scroll system exactly as it was.
+ */
+export function lockSmoothScroll() {
+  if (typeof document === 'undefined') return;
+
+  if (scrollLockDepth === 0) {
+    const html = document.documentElement;
+    const body = document.body;
+    previousHtmlOverflow = html.style.overflow;
+    previousBodyOverflow = body.style.overflow;
+    html.style.overflow = 'hidden';
+    body.style.overflow = 'hidden';
+    activeLenis?.stop();
+  }
+
+  scrollLockDepth += 1;
+}
+
+/** Release the modal scroll lock once the last consumer has closed. */
+export function unlockSmoothScroll() {
+  if (typeof document === 'undefined') return;
+  if (scrollLockDepth === 0) return;
+
+  scrollLockDepth -= 1;
+  if (scrollLockDepth === 0) {
+    document.documentElement.style.overflow = previousHtmlOverflow;
+    document.body.style.overflow = previousBodyOverflow;
+    previousHtmlOverflow = '';
+    previousBodyOverflow = '';
+    activeLenis?.start();
+  }
+}
+
+/**
+ * Programmatic scroll that respects Lenis when it is active. Used by the
+ * luxury scroll rail for precise drag scrubbing and keyboard navigation.
+ */
+export function scrollToY(top: number, smooth = false) {
+  const target = Math.max(0, top);
+
+  if (activeLenis) {
+    activeLenis.scrollTo(target, smooth
+      ? {
+          duration: 1.1,
+          easing: (t) =>
+            t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2,
+        }
+      : { immediate: true, force: true });
+    return;
+  }
+
+  window.scrollTo({ top: target, behavior: smooth ? 'smooth' : 'auto' });
+}
 
 /**
  * Luxury smooth navigation helper used by Navbar & Footer links.

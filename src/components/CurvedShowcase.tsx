@@ -77,8 +77,9 @@ const FRAGMENT_SHADER = `
     float b = texture2D(uTexture, bUv).b;
     float a = texture2D(uTexture, gUv).a;
 
-    float focus = 1.0 - clamp(abs(vCurve) * 0.14, 0.0, 0.24);
+    float focus = 1.0 - clamp(abs(vCurve) * 0.08, 0.0, 0.14);
     gl_FragColor = vec4(vec3(r, g, b) * focus, a * uOpacity);
+    #include <colorspace_fragment>
   }
 `;
 
@@ -187,23 +188,11 @@ export const CurvedShowcase: React.FC<CurvedShowcaseProps> = ({
   const canvasHostRef = useRef<HTMLDivElement | null>(null);
   const [activeIndex, setActiveIndex] = useState(0);
   const [isHoveringCard, setIsHoveringCard] = useState(false);
-  const [isMobile, setIsMobile] = useState(() =>
-    typeof window !== 'undefined' ? window.innerWidth < 768 : false
-  );
 
   const onSelectRef = useRef(onSelectProject);
   onSelectRef.current = onSelectProject;
 
   useEffect(() => {
-    const mq = window.matchMedia('(max-width: 767px)');
-    const onChange = () => setIsMobile(mq.matches);
-    onChange();
-    mq.addEventListener('change', onChange);
-    return () => mq.removeEventListener('change', onChange);
-  }, []);
-
-  useEffect(() => {
-    if (isMobile) return;
     const section = sectionRef.current;
     const host = canvasHostRef.current;
     if (!section || !host) return;
@@ -289,11 +278,13 @@ export const CurvedShowcase: React.FC<CurvedShowcaseProps> = ({
     let cardWidth = 3.2;
     let cardHeight = 4.26;
     let step = 3.52;
+    let pixelsPerCard = window.innerWidth < 768 ? 230 : 290;
     let cachedVh = window.innerHeight || 800;
 
     const handleResize = () => {
       const w = host.clientWidth || window.innerWidth;
       const h = host.clientHeight || window.innerHeight * 0.64;
+      const isNarrow = w < 768;
       cachedVh = window.innerHeight || 800;
       renderer.setSize(w, h);
       camera.aspect = w / h;
@@ -303,14 +294,25 @@ export const CurvedShowcase: React.FC<CurvedShowcaseProps> = ({
       viewHeight = 2 * Math.tan(vFov / 2) * camera.position.z;
       viewWidth = viewHeight * camera.aspect;
 
-      // Exact 3:4 Portrait card sizing filling ~78% of stage height cleanly
-      cardHeight = Math.min(viewHeight * 0.78, viewWidth * 0.42);
-      cardWidth = cardHeight * 0.75;
-      step = cardWidth * 1.14;
+      if (isNarrow) {
+        // Bold, generous 3:4 portrait plate filling the phone stage cleanly
+        cardWidth = Math.min(viewWidth * 0.66, viewHeight * 0.68 * 0.75);
+        cardHeight = cardWidth / 0.75;
+        step = cardWidth * 1.12;
+        pixelsPerCard = 230;
+      } else {
+        // Exact 3:4 Portrait card sizing filling ~78% of stage height cleanly
+        cardHeight = Math.min(viewHeight * 0.78, viewWidth * 0.42);
+        cardWidth = cardHeight * 0.75;
+        step = cardWidth * 1.14;
+        pixelsPerCard = 290;
+      }
 
       meshes.forEach((m) => {
         m.material.uniforms.uViewportHalfWidth.value = viewWidth * 0.5;
-        m.material.uniforms.uBendStrength.value = viewHeight * 0.24;
+        m.material.uniforms.uBendStrength.value = isNarrow
+          ? viewHeight * 0.16
+          : viewHeight * 0.24;
         m.material.uniforms.uDepthStrength.value = 0.6;
       });
     };
@@ -322,14 +324,12 @@ export const CurvedShowcase: React.FC<CurvedShowcaseProps> = ({
     renderer.compile(scene, camera);
     renderer.render(scene, camera);
 
-    const pixelsPerCard = 290;
     const maxIndex = Math.max(1, featuredProjects.length - 1);
-    const pinDistance = maxIndex * pixelsPerCard;
 
     const st = ScrollTrigger.create({
       trigger: section,
       start: 'top top',
-      end: () => `+=${pinDistance}`,
+      end: () => `+=${maxIndex * pixelsPerCard}`,
       pin: true,
       anticipatePin: 1,
       invalidateOnRefresh: true,
@@ -383,6 +383,7 @@ export const CurvedShowcase: React.FC<CurvedShowcaseProps> = ({
 
       const leadInPx = cachedVh * 0.45;
       const leadOutPx = cachedVh * 0.65;
+      const pinDistance = maxIndex * pixelsPerCard;
       const relScroll = window.scrollY - st.start;
 
       let targetCardFloat = 0;
@@ -477,73 +478,9 @@ export const CurvedShowcase: React.FC<CurvedShowcaseProps> = ({
         host.removeChild(renderer.domElement);
       }
     };
-  }, [featuredProjects, isMobile]);
+  }, [featuredProjects]);
 
   const activeProject = featuredProjects[activeIndex] ?? featuredProjects[0];
-
-  // Dedicated silky 3:4 Portrait Swipe Gallery on Mobile (< 768px)
-  if (isMobile) {
-    return (
-      <section
-        id="showcase"
-        className="bg-crimson-canvas relative w-full py-20 overflow-hidden border-t border-[#C8A86B]/20"
-      >
-        <div className="px-6 mb-8">
-          <div className="flex items-center gap-3 text-[10px] tracking-[0.24em] uppercase text-[#C8A86B] mb-2">
-            <span>02 / FEATURED CAMPAIGNS</span>
-            <span className="w-6 h-[1px] bg-[#C8A86B]/50" />
-            <span className="text-[#EFE5D1]/65">SWIPE →</span>
-          </div>
-          <h2 className="font-serif-editorial text-4xl leading-none font-light text-[#EFE5D1]">
-            Brand &amp; <span className="italic text-[#C8A86B]">Visual</span> Campaigns
-          </h2>
-        </div>
-
-        <div className="flex gap-4 overflow-x-auto snap-x snap-mandatory px-6 pb-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          {featuredProjects.map((project, idx) => {
-            const cover = project.coverImage || project.gallery?.[0];
-            return (
-              <button
-                key={project.id}
-                type="button"
-                onClick={() => onSelectProject(project)}
-                className="snap-center shrink-0 w-[76vw] max-w-[300px] text-left bg-[#220405] border border-[#C8A86B]/40 overflow-hidden"
-              >
-                <div className="aspect-[3/4] w-full relative overflow-hidden bg-[#2A0608]">
-                  {cover ? (
-                    <img
-                      src={cover}
-                      alt={project.title}
-                      loading="lazy"
-                      decoding="async"
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <div className="w-full h-full p-5 flex flex-col justify-between">
-                      <span className="text-[10px] tracking-[0.2em] text-[#C8A86B]">
-                        PLATE {ROMAN_NUMERALS[idx] ?? idx + 1}
-                      </span>
-                      <span className="font-serif-editorial text-2xl text-[#EFE5D1]">
-                        {project.title}
-                      </span>
-                    </div>
-                  )}
-                </div>
-                <div className="p-4 border-t border-[#C8A86B]/20">
-                  <p className="text-[9px] tracking-[0.2em] uppercase text-[#C8A86B] mb-1">
-                    {project.subTag}
-                  </p>
-                  <p className="font-serif-editorial text-xl text-[#EFE5D1] leading-snug">
-                    {project.title}
-                  </p>
-                </div>
-              </button>
-            );
-          })}
-        </div>
-      </section>
-    );
-  }
 
   return (
     <section
