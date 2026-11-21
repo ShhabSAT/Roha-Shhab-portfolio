@@ -169,7 +169,9 @@ export const Hero: React.FC = () => {
         className="absolute inset-0 pointer-events-none overflow-hidden z-0"
         aria-hidden="true"
       >
-        {/* Layer A — The Classical Painting, colour grade already baked into the WebP */}
+        {/* Layer A — The Classical Painting, colour grade already baked into the WebP.
+            Gently offset to the right on desktop so the figure balances the
+            left-aligned wordmark; the crimson scrim below hides the left edge. */}
         <img
           src="/media/hero-muse.webp"
           alt=""
@@ -177,7 +179,7 @@ export const Hero: React.FC = () => {
           draggable={false}
           fetchPriority="high"
           decoding="async"
-          className="absolute inset-0 w-full h-full object-cover object-[68%_22%] md:object-[72%_28%] opacity-80 select-none"
+          className="absolute inset-0 w-full h-full object-cover object-[68%_24%] md:object-[72%_26%] md:translate-x-[7%] opacity-80 select-none"
         />
 
         {/* Layer B — Editorial Readability & Candlelight Vignette */}
@@ -185,7 +187,7 @@ export const Hero: React.FC = () => {
           className="absolute inset-0"
           style={{
             background:
-              'linear-gradient(90deg, #1E0405 0%, rgba(36, 5, 6, 0.92) 38%, rgba(45, 6, 8, 0.42) 68%, rgba(24, 3, 4, 0.58) 100%)',
+              'linear-gradient(90deg, #1E0405 0%, #1E0405 14%, rgba(36, 5, 6, 0.94) 42%, rgba(45, 6, 8, 0.42) 70%, rgba(24, 3, 4, 0.58) 100%)',
           }}
         />
         <div

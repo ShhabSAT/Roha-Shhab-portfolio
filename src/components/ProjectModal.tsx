@@ -58,6 +58,9 @@ export const ProjectModal: React.FC<ProjectModalProps> = ({
 
   return (
     <div
+      role="dialog"
+      aria-modal="true"
+      aria-label={`${project.title} project dossier`}
       className="fixed inset-0 z-[200] flex items-center justify-center p-4 md:p-8 bg-[#120203]/90"
       onClick={onClose}
     >
@@ -102,51 +105,89 @@ export const ProjectModal: React.FC<ProjectModalProps> = ({
             />
 
             {project.videoUrl && !videoFailed ? (
-              <video
-                src={project.videoUrl}
-                controls
-                playsInline
-                onError={() => setVideoFailed(true)}
-                className="w-full max-h-[520px] object-contain bg-[#120203]"
-              />
+              <div className="w-full flex justify-center">
+                <div className="relative aspect-[9/16] h-[64vh] max-h-[560px] w-auto shrink-0 bg-[#120203] border border-[#C8A86B]/40 shadow-[0_18px_45px_rgba(0,0,0,0.45)]">
+                  <video
+                    src={project.videoUrl}
+                    controls
+                    playsInline
+                    preload="metadata"
+                    onError={() => setVideoFailed(true)}
+                    className="w-full h-full object-contain bg-[#120203]"
+                  />
+                </div>
+              </div>
             ) : activeSlide && !imgFailed ? (
-              <div className="relative w-full h-full flex items-center justify-center">
-                <img
-                  src={activeSlide}
-                  alt={`${project.title} — slide ${slideIdx + 1}`}
-                  onError={() => setImgFailed(true)}
-                  className="max-h-[480px] w-auto object-contain mx-auto"
-                />
+              <div className="w-full flex flex-col items-center">
+                <div className="relative inline-flex max-w-full items-center justify-center">
+                  <img
+                    src={activeSlide}
+                    alt={`${project.title} — slide ${slideIdx + 1}`}
+                    decoding="async"
+                    onError={() => setImgFailed(true)}
+                    className="aspect-[3/4] max-h-[520px] w-auto object-contain mx-auto"
+                  />
+
+                  {hasMultipleSlides && (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setSlideIdx(
+                            (prev) => (prev - 1 + slides.length) % slides.length
+                          )
+                        }
+                        aria-label="Previous slide"
+                        className="absolute left-2 top-1/2 -translate-y-1/2 w-10 h-10 bg-[#1B0405]/85 border border-[#C8A86B]/50 flex items-center justify-center text-[#EFE5D1] hover:bg-[#EFE5D1] hover:text-[#1E0707] transition-colors"
+                      >
+                        <ChevronLeft className="w-4 h-4" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setSlideIdx((prev) => (prev + 1) % slides.length)
+                        }
+                        aria-label="Next slide"
+                        className="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 bg-[#1B0405]/85 border border-[#C8A86B]/50 flex items-center justify-center text-[#EFE5D1] hover:bg-[#EFE5D1] hover:text-[#1E0707] transition-colors"
+                      >
+                        <ChevronRight className="w-4 h-4" />
+                      </button>
+                      <div className="absolute bottom-2 left-1/2 -translate-x-1/2 bg-[#1B0405]/90 border border-[#C8A86B]/30 px-3 py-1 text-[10px] tracking-[0.22em] text-[#C8A86B]">
+                        {String(slideIdx + 1).padStart(2, '0')} /{' '}
+                        {String(slides.length).padStart(2, '0')}
+                      </div>
+                    </>
+                  )}
+                </div>
 
                 {hasMultipleSlides && (
-                  <>
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setSlideIdx(
-                          (prev) => (prev - 1 + slides.length) % slides.length
-                        )
-                      }
-                      aria-label="Previous slide"
-                      className="absolute left-2 top-1/2 -translate-y-1/2 w-10 h-10 bg-[#1B0405]/85 border border-[#C8A86B]/50 flex items-center justify-center text-[#EFE5D1] hover:bg-[#EFE5D1] hover:text-[#1E0707] transition-colors"
-                    >
-                      <ChevronLeft className="w-4 h-4" />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setSlideIdx((prev) => (prev + 1) % slides.length)
-                      }
-                      aria-label="Next slide"
-                      className="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 bg-[#1B0405]/85 border border-[#C8A86B]/50 flex items-center justify-center text-[#EFE5D1] hover:bg-[#EFE5D1] hover:text-[#1E0707] transition-colors"
-                    >
-                      <ChevronRight className="w-4 h-4" />
-                    </button>
-                    <div className="absolute bottom-2 left-1/2 -translate-x-1/2 bg-[#1B0405]/90 border border-[#C8A86B]/30 px-3 py-1 text-[10px] tracking-[0.22em] text-[#C8A86B]">
-                      {String(slideIdx + 1).padStart(2, '0')} /{' '}
-                      {String(slides.length).padStart(2, '0')}
-                    </div>
-                  </>
+                  <div className="scrollbar-hide flex gap-2 overflow-x-auto justify-center mt-4 w-full pb-1">
+                    {slides.map((slide, idx) => {
+                      const isActive = idx === slideIdx;
+                      return (
+                        <button
+                          key={slide}
+                          type="button"
+                          onClick={() => setSlideIdx(idx)}
+                          aria-label={`View slide ${idx + 1} of ${slides.length}`}
+                          aria-current={isActive ? 'true' : undefined}
+                          className={`relative shrink-0 w-11 h-[58px] overflow-hidden border transition-all duration-300 ${
+                            isActive
+                              ? 'border-[#C8A86B] opacity-100'
+                              : 'border-[#C8A86B]/25 opacity-55 hover:opacity-90 hover:border-[#C8A86B]/60'
+                          }`}
+                        >
+                          <img
+                            src={slide}
+                            alt=""
+                            loading="lazy"
+                            decoding="async"
+                            className="w-full h-full object-cover"
+                          />
+                        </button>
+                      );
+                    })}
+                  </div>
                 )}
               </div>
             ) : (

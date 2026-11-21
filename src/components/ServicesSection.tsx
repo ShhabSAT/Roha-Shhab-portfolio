@@ -33,20 +33,20 @@ export const ServicesSection: React.FC = () => {
 
   useEffect(() => {
     const ctx = gsap.context(() => {
-      // Scrubbed Entry: "The Craft We Deliver" lifts into view
+      // One-shot header entrance (GPU transform + opacity)
       if (headerRef.current) {
         gsap.fromTo(
           headerRef.current,
-          { y: 40, opacity: 0.2 },
+          { y: 40, opacity: 0 },
           {
             y: 0,
             opacity: 1,
-            ease: 'none',
+            duration: 1.05,
+            ease: 'power3.out',
             scrollTrigger: {
-              trigger: sectionRef.current,
-              start: 'top bottom',
-              end: 'top 35%',
-              scrub: true,
+              trigger: headerRef.current,
+              start: 'top 85%',
+              once: true,
             },
           }
         );
@@ -83,6 +83,7 @@ export const ServicesSection: React.FC = () => {
         scrollTrigger: {
           trigger: sectionRef.current,
           start: 'top 78%',
+          once: true,
         },
       });
     }, sectionRef);
@@ -100,7 +101,7 @@ export const ServicesSection: React.FC = () => {
         {/* Header */}
         <div ref={headerRef} className="mb-12 md:mb-16">
           <div className="flex items-center gap-3 text-[10px] md:text-[11px] font-sans font-semibold uppercase tracking-[0.24em] text-[#9E4224] mb-5">
-            <span>04 / SERVICES &amp; CRAFT</span>
+            <span>05 / SERVICES &amp; CRAFT</span>
             <span className="w-6 h-[1px] bg-[#9E4224]/40" />
           </div>
           <h2 className="font-serif-editorial text-4xl sm:text-5xl md:text-6xl font-light leading-[0.95] tracking-[-0.02em] text-[#1E0707]">

@@ -1,22 +1,25 @@
 import React, { useEffect, useRef, useState } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { ArrowUpRight } from 'lucide-react';
+import { ArrowUpRight, Play } from 'lucide-react';
 import { PROJECTS } from '../data/portfolioData';
 import type { ProjectItem } from '../data/portfolioData';
 import { BaroqueCorner } from './BaroqueOrnaments';
 
 gsap.registerPlugin(ScrollTrigger);
 
-type FilterKey = 'all' | ProjectItem['category'];
+// Social & brand campaigns are presented in full by CurvedShowcase (5) and
+// HexagonDrumShowcase (6), so this ledger covers only the remaining 16 credits.
+type FilterKey = 'screenwriting' | 'theatre-historical' | 'field-reels';
 
 const FILTERS: { key: FilterKey; label: string }[] = [
-  { key: 'all', label: 'ALL' },
   { key: 'screenwriting', label: 'SCREENWRITING & CARTOONS' },
   { key: 'theatre-historical', label: 'THEATRE & HISTORICAL' },
-  { key: 'social-brand', label: 'SOCIAL & BRAND' },
-  { key: 'field-reels', label: 'FIELD & REELS' },
+  { key: 'field-reels', label: 'FIELD PRODUCTION & REELS' },
 ];
+
+const countFor = (key: FilterKey) =>
+  PROJECTS.filter((project) => project.category === key).length;
 
 interface SelectedWorksProps {
   onSelectProject: (project: ProjectItem) => void;
@@ -31,14 +34,13 @@ export const SelectedWorks: React.FC<SelectedWorksProps> = ({
   const plateRef = useRef<HTMLButtonElement>(null);
   const refreshTimer = useRef<number | null>(null);
 
-  const [activeFilter, setActiveFilter] = useState<FilterKey>('all');
+  const [activeFilter, setActiveFilter] = useState<FilterKey>('screenwriting');
   const [previewId, setPreviewId] = useState<string | null>(null);
   const [failedImages, setFailedImages] = useState<string[]>([]);
 
-  const filtered =
-    activeFilter === 'all'
-      ? PROJECTS
-      : PROJECTS.filter((project) => project.category === activeFilter);
+  const filtered = PROJECTS.filter(
+    (project) => project.category === activeFilter
+  );
 
   const previewProject =
     filtered.find((project) => project.id === previewId) ?? filtered[0];
@@ -65,23 +67,23 @@ export const SelectedWorks: React.FC<SelectedWorksProps> = ({
     };
   }, [previewKey]);
 
-  // Scrubbed header + filter tabs entry (connects the HexagonDrum exit above)
+  // One-shot header entrance (GPU transform + opacity only)
   useEffect(() => {
     const ctx = gsap.context(() => {
       if (!headerRef.current) return;
 
       gsap.fromTo(
         headerRef.current,
-        { y: 40, opacity: 0.2 },
+        { y: 36, opacity: 0 },
         {
           y: 0,
           opacity: 1,
-          ease: 'none',
+          duration: 1.05,
+          ease: 'power3.out',
           scrollTrigger: {
-            trigger: sectionRef.current,
-            start: 'top bottom',
-            end: 'top 35%',
-            scrub: true,
+            trigger: headerRef.current,
+            start: 'top 86%',
+            once: true,
           },
         }
       );
@@ -90,7 +92,7 @@ export const SelectedWorks: React.FC<SelectedWorksProps> = ({
     return () => ctx.revert();
   }, []);
 
-  // Editorial row reveal on scroll (re-armed whenever the filter changes)
+  // Light one-shot row reveal, re-armed whenever the tab changes.
   useEffect(() => {
     if (!listRef.current) return;
 
@@ -98,34 +100,27 @@ export const SelectedWorks: React.FC<SelectedWorksProps> = ({
       const rows = Array.from(listRef.current?.children ?? []);
       if (rows.length === 0) return;
 
-      gsap.from(rows, {
-        y: 26,
-        opacity: 0,
-        duration: 0.7,
-        stagger: 0.045,
-        ease: 'power3.out',
-        immediateRender: false,
-        scrollTrigger: {
-          trigger: listRef.current,
-          start: 'top 82%',
-        },
-      });
+      gsap.fromTo(
+        rows,
+        { y: 18, opacity: 0 },
+        {
+          y: 0,
+          opacity: 1,
+          duration: 0.55,
+          stagger: 0.035,
+          ease: 'power3.out',
+          clearProps: 'transform,opacity',
+          scrollTrigger: {
+            trigger: listRef.current,
+            start: 'top 92%',
+            once: true,
+          },
+        }
+      );
     }, sectionRef);
 
     return () => ctx.revert();
   }, [activeFilter]);
-
-  const handleFilter = (key: FilterKey) => {
-    setActiveFilter(key);
-    setPreviewId(null);
-
-    // Filtering changes the document height, so downstream pinned/scroll
-    // triggers must be re-measured once React has committed the new rows.
-    if (refreshTimer.current) window.clearTimeout(refreshTimer.current);
-    refreshTimer.current = window.setTimeout(() => {
-      ScrollTrigger.refresh();
-    }, 160);
-  };
 
   useEffect(() => {
     return () => {
@@ -133,11 +128,24 @@ export const SelectedWorks: React.FC<SelectedWorksProps> = ({
     };
   }, []);
 
+  const handleFilter = (key: FilterKey) => {
+    if (key === activeFilter) return;
+    setActiveFilter(key);
+    setPreviewId(null);
+
+    // The ledger changes height, so re-measure downstream triggers once React
+    // has committed the new rows.
+    if (refreshTimer.current) window.clearTimeout(refreshTimer.current);
+    refreshTimer.current = window.setTimeout(() => {
+      ScrollTrigger.refresh();
+    }, 160);
+  };
+
   return (
     <section
       id="works"
       ref={sectionRef}
-      className="relative w-full bg-parchment-paper py-24 md:py-36 px-6 md:px-14 text-[#1E0707] border-t border-[#1E0707]/15 overflow-x-clip"
+      className="relative w-full bg-parchment-paper text-[#1E0707] py-20 md:py-28 px-6 md:px-14 border-t border-[#1E0707]/15 overflow-x-clip"
     >
       {/* Crimson damask-tint radial depth across the parchment */}
       <div
@@ -157,11 +165,12 @@ export const SelectedWorks: React.FC<SelectedWorksProps> = ({
         >
           <div>
             <div className="flex items-center gap-3 text-[10px] md:text-[11px] font-sans font-semibold uppercase tracking-[0.24em] text-[#9E4224] mb-5">
-              <span>03 / COMPLETE ARCHIVE</span>
+              <span>04 / CREDITS &amp; REELS</span>
               <span className="w-6 h-[1px] bg-[#9E4224]/40" />
             </div>
             <h2 className="font-serif-editorial text-4xl sm:text-5xl md:text-6xl font-light leading-[0.95] tracking-[-0.02em] text-[#1E0707]">
-              Selected <span className="italic text-[#5C1110]">Works</span>
+              Narrative, Stage{' '}
+              <span className="italic text-[#5C1110]">&amp; Film</span>
             </h2>
           </div>
 
@@ -173,6 +182,8 @@ export const SelectedWorks: React.FC<SelectedWorksProps> = ({
                 <button
                   key={filter.key}
                   type="button"
+                  data-filter-tab={filter.key}
+                  aria-pressed={isActive}
                   onClick={() => handleFilter(filter.key)}
                   className={`shrink-0 rounded-none border px-3.5 py-2.5 text-[10px] font-sans tracking-[0.18em] uppercase transition-colors duration-300 ${
                     isActive
@@ -180,8 +191,7 @@ export const SelectedWorks: React.FC<SelectedWorksProps> = ({
                       : 'bg-transparent border-[#1E0707]/20 text-[#1E0707] hover:border-[#9E4224] hover:text-[#9E4224]'
                   }`}
                 >
-                  {filter.label}
-                  {filter.key === 'all' ? ` (${PROJECTS.length})` : ''}
+                  {filter.label} ({countFor(filter.key)})
                 </button>
               );
             })}
@@ -198,15 +208,35 @@ export const SelectedWorks: React.FC<SelectedWorksProps> = ({
                 ref={plateRef}
                 onClick={() => onSelectProject(previewProject)}
                 data-cursor="view"
+                data-preview-id={previewProject.id}
                 aria-label={`Inspect ${previewProject.title}`}
-                className="group relative w-full aspect-[4/5] bg-crimson-canvas border border-[#C8A86B]/40 p-7 flex flex-col justify-between text-left text-[#EFE5D1] overflow-hidden"
+                className="group relative w-full aspect-[3/4] bg-crimson-canvas border border-[#C8A86B]/40 p-7 flex flex-col justify-between text-left text-[#EFE5D1] overflow-hidden"
               >
-                {showImage && (
+                {previewProject.videoUrl ? (
+                  <>
+                    <video
+                      key={previewProject.id}
+                      src={previewProject.videoUrl}
+                      muted
+                      loop
+                      autoPlay
+                      playsInline
+                      preload="metadata"
+                      aria-hidden="true"
+                      className="absolute inset-0 w-full h-full object-contain bg-[#120203]"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#1B0405] via-[#1B0405]/45 to-transparent" />
+                    <span className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center justify-center w-12 h-12 border border-[#C8A86B]/60 bg-[#1B0405]/35 text-[#EFE5D1] z-10">
+                      <Play className="w-4 h-4" strokeWidth={1.25} />
+                    </span>
+                  </>
+                ) : showImage ? (
                   <>
                     <img
                       src={previewProject.coverImage}
                       alt=""
                       aria-hidden="true"
+                      decoding="async"
                       className="absolute inset-0 w-full h-full object-cover"
                       onError={() =>
                         setFailedImages((prev) =>
@@ -218,9 +248,7 @@ export const SelectedWorks: React.FC<SelectedWorksProps> = ({
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-[#1B0405] via-[#1B0405]/55 to-[#1B0405]/15" />
                   </>
-                )}
-
-                {!showImage && (
+                ) : (
                   <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
                     <div className="absolute inset-[14px] border border-[#C8A86B]/20" />
                     <div
@@ -264,7 +292,11 @@ export const SelectedWorks: React.FC<SelectedWorksProps> = ({
                 </div>
 
                 <div className="relative z-10 flex items-center justify-between border-t border-[#C8A86B]/25 pt-4 text-[10px] tracking-[0.22em] uppercase text-[#C8A86B]">
-                  <span>CLICK TO INSPECT DOSSIER</span>
+                  <span>
+                    {previewProject.videoUrl
+                      ? 'REEL PREVIEW — CLICK TO PLAY'
+                      : 'CLICK TO INSPECT DOSSIER'}
+                  </span>
                   <span className="transition-transform duration-300 group-hover:translate-x-1">
                     →
                   </span>
@@ -316,7 +348,7 @@ export const SelectedWorks: React.FC<SelectedWorksProps> = ({
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-between md:justify-end gap-5 md:gap-7 pl-0 md:pl-0 shrink-0">
+                  <div className="flex items-center justify-between md:justify-end gap-5 md:gap-7 shrink-0">
                     <div className="text-left md:text-right">
                       <span className="block text-[10px] tracking-[0.2em] uppercase opacity-80">
                         {project.subTag}

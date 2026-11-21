@@ -16,26 +16,27 @@ export const AboutSection: React.FC = () => {
 
   useEffect(() => {
     const ctx = gsap.context(() => {
-      // Scrubbed Entry: editorial statement & paragraphs glide up into place
+      // Entrance reveal: one GPU-only transform/opacity pass, then the
+      // elements are left alone so scrolling back never re-runs the work.
       if (contentRef.current) {
         gsap.fromTo(
           contentRef.current,
-          { y: 45, opacity: 0.25 },
+          { y: 40, opacity: 0 },
           {
             y: 0,
             opacity: 1,
-            ease: 'none',
+            duration: 1.05,
+            ease: 'power3.out',
             scrollTrigger: {
-              trigger: sectionRef.current,
-              start: 'top bottom',
-              end: 'top 30%',
-              scrub: true,
+              trigger: contentRef.current,
+              start: 'top 82%',
+              once: true,
             },
           }
         );
       }
 
-      // The vertical terracotta/gold hairline draws downward with the entry
+      // The vertical terracotta/gold hairline draws downward once on entry
       if (hairlineRef.current) {
         gsap.fromTo(
           hairlineRef.current,
@@ -43,12 +44,12 @@ export const AboutSection: React.FC = () => {
           {
             scaleY: 1,
             transformOrigin: 'top center',
-            ease: 'none',
+            duration: 1.15,
+            ease: 'power3.out',
             scrollTrigger: {
-              trigger: sectionRef.current,
-              start: 'top bottom',
-              end: 'top 30%',
-              scrub: true,
+              trigger: leftColRef.current,
+              start: 'top 82%',
+              once: true,
             },
           }
         );
@@ -65,6 +66,7 @@ export const AboutSection: React.FC = () => {
           scrollTrigger: {
             trigger: statsRef.current,
             start: 'top 85%',
+            once: true,
           },
         });
       }

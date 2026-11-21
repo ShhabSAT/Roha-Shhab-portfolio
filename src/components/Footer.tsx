@@ -26,20 +26,20 @@ export const Footer: React.FC = () => {
       if (contactGridRef.current) targets.push(contactGridRef.current);
       if (targets.length === 0) return;
 
-      // Signature curtain reveal: the finale rises out of a recessed frame
+      // Signature curtain reveal: one transform/opacity pass, then settle.
       gsap.fromTo(
         targets,
-        { y: -55, opacity: 0.2, scale: 0.96 },
+        { y: -40, opacity: 0, scale: 0.97 },
         {
           y: 0,
           opacity: 1,
           scale: 1,
-          ease: 'none',
+          duration: 1.1,
+          ease: 'power3.out',
           scrollTrigger: {
             trigger: footerRef.current,
-            start: 'top bottom',
-            end: 'top 35%',
-            scrub: true,
+            start: 'top 82%',
+            once: true,
           },
         }
       );
@@ -94,7 +94,7 @@ export const Footer: React.FC = () => {
 
         {/* Micro-label */}
         <div className="flex items-center gap-3 text-[10px] md:text-[11px] font-sans font-semibold uppercase tracking-[0.24em] text-[#C8A86B]">
-          <span>06 / INQUIRIES &amp; COMMISSIONS</span>
+          <span>07 / INQUIRIES &amp; COMMISSIONS</span>
           <span className="w-6 h-[1px] bg-[#C8A86B]/40" />
         </div>
 

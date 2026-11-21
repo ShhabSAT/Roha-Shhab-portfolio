@@ -1,3 +1,5 @@
+import { FOLDER_MEDIA, REEL_VIDEOS } from './generatedMedia';
+
 export interface ProjectItem {
   id: string;
   title: string;
@@ -231,80 +233,164 @@ export const PROJECTS: ProjectItem[] = [
     accentTone: 'oxblood',
   },
 
-  // ================= 3. SOCIAL MEDIA & BRAND CAMPAIGNS (READY FOR THE 56 ASSETS) =================
+  // ================= 3. SOCIAL MEDIA, BRAND CAMPAIGNS & VISUAL DESIGN =================
   {
-    id: 'maqam-growth-strategy',
-    title: 'Maqam Studio — Brand Identity & Growth',
-    client: 'Maqam Studio',
+    id: 'promo-maimoon-spacetoon',
+    title: 'Maimoon Adventures — Spacetoon Promo',
+    client: 'Spacetoon • Maqam Studio',
     category: 'social-brand',
-    subTag: 'Brand & Social Strategy',
+    subTag: 'Show Promo Campaign',
     summary:
-      'Full-year creative direction, visual branding, and content strategy growing Maqam from 600 to 4,600+ active followers.',
+      'A two-frame character reveal introducing Maimoon, the bird who finds a story in every word.',
     fullStory:
-      'Directed social media strategies for a full year. Handled monthly content briefs, graphic design, on-ground photography, videography, and post-production editing. Successfully grew Maqam’s digital community from 600 followers to over 4,600 active followers with continuous upward growth.',
-    metrics: '600 → 4,600+ Followers',
-    coverImage: '/media/brand/project-1-cover.jpg',
-    gallery: [],
+      'Designed and art-directed the promotional reveal for Maimoon Adventures, pairing character storytelling with a type-led announcement system. The campaign introduced Maimoon’s world across Spacetoon’s social channels, balancing playful illustration with Maqam’s editorial visual language.',
+    coverImage: FOLDER_MEDIA[1]?.[0],
+    gallery: FOLDER_MEDIA[1] ?? [],
     accentTone: 'crimson',
   },
   {
-    id: 'visual-photography-design',
-    title: 'Visual Design & Editorial Photography',
+    id: 'visual-kingdom-eloquence',
+    title: 'Kingdom of Eloquence — Stage Visuals',
     client: 'Maqam Studio',
     category: 'social-brand',
-    subTag: 'Visual Direction',
+    subTag: 'Photography & Visual Design',
     summary:
-      'Curated visual campaigns blending art direction, stage photography, and typography.',
+      'Six-frame visual record of Kingdom of Eloquence at the Syrian Summer Festival.',
     fullStory:
-      'Two dedicated visual campaigns combining on-ground photography and structured editorial graphic design tailored for cultural and theatrical branding.',
-    coverImage: '/media/visual/project-1-cover.jpg',
-    gallery: [],
+      'Documented and designed the visual campaign for Kingdom of Eloquence at the Damascus Citadel, combining on-ground stage photography with structured editorial layouts. The series translated the energy of the live performance into a cohesive six-part digital narrative.',
+    coverImage: FOLDER_MEDIA[2]?.[0],
+    gallery: FOLDER_MEDIA[2] ?? [],
     accentTone: 'terracotta',
   },
   {
-    id: 'educational-carousels',
-    title: 'Educational & Narrative Carousels',
+    id: 'occasions-mothers-day',
+    title: "Mother's Day & Cultural Tributes",
     client: 'Maqam Studio',
     category: 'social-brand',
-    subTag: 'Educational Carousels (4 Series)',
+    subTag: 'Seasonal Campaign',
     summary:
-      'Informational carousel series covering theatre arts, reading habits, writing craft, and podcast storytelling.',
+      'A warm three-part tribute series celebrating mothers and shared cultural memory.',
     fullStory:
-      'Authored and designed four multi-slide educational carousels breaking down child development through theatre, how to choose books for kids, handwriting cognitive benefits, and audio storytelling retention.',
-    coverImage: '/media/carousels/project-1-cover.jpg',
-    gallery: [],
+      'Crafted a three-slide seasonal suite for Mother’s Day that balanced emotional copy with restrained, painterly art direction. The series extended Maqam’s occasion calendar with a tone of quiet gratitude rather than conventional holiday advertising.',
+    coverImage: FOLDER_MEDIA[3]?.[0],
+    gallery: FOLDER_MEDIA[3] ?? [],
     accentTone: 'gold',
   },
   {
-    id: 'cartoon-promo-campaigns',
-    title: 'Cartoon & Show Promotional Campaigns',
-    client: 'Spacetoon & Maqam',
+    id: 'brand-maqam-sixth-year',
+    title: 'Maqam Studio — 6th Year Brand Story',
+    client: 'Maqam Studio',
     category: 'social-brand',
-    subTag: 'Show Promotions',
+    subTag: 'Brand Identity & Growth',
     summary:
-      'Launch visuals and character teaser campaigns for broadcast cartoons and stage productions.',
+      "A seven-part anniversary narrative tracing Maqam's growth from a small studio to a cultural platform.",
     fullStory:
-      'Conceptualized and designed promotional visual suites announcing new cartoon episodes, character launches, and theatrical tours across digital platforms.',
-    coverImage: '/media/promos/project-1-cover.jpg',
-    gallery: [],
+      "Wrote and designed the sixth-anniversary brand story for Maqam Studio, structuring seven sequential frames around the people, productions, and milestones that shaped the studio. The campaign anchored a year of growth that expanded Maqam's community from 600 to more than 4,600 followers.",
+    metrics: '600 → 4,600+ Followers',
+    coverImage: FOLDER_MEDIA[4]?.[0],
+    gallery: FOLDER_MEDIA[4] ?? [],
+    accentTone: 'crimson',
+  },
+  {
+    id: 'occasions-ramadan-hijri',
+    title: 'Ramadan & Hijri Occasion Suite',
+    client: 'Maqam Studio',
+    category: 'social-brand',
+    subTag: 'Seasonal Campaign',
+    summary:
+      'A five-part suite of Ramadan, Laylat al-Qadr, Eid, and Hijri New Year greetings.',
+    fullStory:
+      "Developed a cohesive occasion suite spanning Ramadan, Laylat al-Qadr, Eid al-Fitr, and the Hijri New Year. Each frame paired concise Arabic copy with atmospheric imagery and a shared typographic system, keeping the studio's voice consistent across a dense seasonal calendar.",
+    coverImage: FOLDER_MEDIA[5]?.[0],
+    gallery: FOLDER_MEDIA[5] ?? [],
     accentTone: 'oxblood',
   },
   {
-    id: 'seasonal-cultural-campaigns',
-    title: 'Seasonal & Cultural Occasion Campaigns',
+    id: 'carousel-handwriting-craft',
+    title: 'The Craft of Handwriting — Educational Series',
     client: 'Maqam Studio',
     category: 'social-brand',
-    subTag: 'Occasion Campaigns',
+    subTag: 'Educational Carousel',
     summary:
-      'Bespoke visual storytelling for Ramadan, Hijri New Year, Mother’s Day, and cultural milestones.',
+      'A five-slide carousel on handwriting as a cognitive and expressive craft.',
     fullStory:
-      'Crafted warm, culturally resonant visual greetings and campaign series celebrating key seasonal moments while preserving brand identity.',
-    coverImage: '/media/occasions/project-1-cover.jpg',
-    gallery: [],
+      'Researched and wrote a five-part educational carousel exploring handwriting as a link between language, memory, and identity. The sequence moved from classical quotation to practical insight, designed for saveable, slow-reading engagement rather than quick consumption.',
+    coverImage: FOLDER_MEDIA[6]?.[0],
+    gallery: FOLDER_MEDIA[6] ?? [],
+    accentTone: 'gold',
+  },
+  {
+    id: 'promo-behind-every-art',
+    title: 'Behind Every Art — Show Teaser Campaign',
+    client: 'Maqam Studio',
+    category: 'social-brand',
+    subTag: 'Show Promo Campaign',
+    summary:
+      "A four-frame teaser campaign revealing the collaborative craft behind Maqam's productions.",
+    fullStory:
+      "Conceptualized a four-part teaser series that pulled back the curtain on Maqam's production process. Each frame connected a visible stage moment to the unseen writing, design, and rehearsal work behind it, building anticipation for the studio's upcoming season.",
+    coverImage: FOLDER_MEDIA[7]?.[0],
+    gallery: FOLDER_MEDIA[7] ?? [],
+    accentTone: 'terracotta',
+  },
+  {
+    id: 'carousel-podcast-retention',
+    title: 'Mastering Podcast Retention — Audio Craft',
+    client: 'Maqam Studio',
+    category: 'social-brand',
+    subTag: 'Educational Carousel',
+    summary:
+      'A four-part breakdown of the narrative techniques that keep listeners engaged.',
+    fullStory:
+      'Authored a four-slide educational carousel on podcast retention, translating structural storytelling principles into clear, practical guidance. The series used a disciplined grid and illustration system to make audio craft visually legible.',
+    coverImage: FOLDER_MEDIA[8]?.[0],
+    gallery: FOLDER_MEDIA[8] ?? [],
+    accentTone: 'crimson',
+  },
+  {
+    id: 'brand-maqam-project-vision',
+    title: 'From Concept to Reality — Maqam Identity',
+    client: 'Maqam Studio',
+    category: 'social-brand',
+    subTag: 'Brand Identity Suite',
+    summary:
+      "A seven-frame identity suite showing how Maqam turns an idea into a staged experience.",
+    fullStory:
+      "Built a seven-part brand narrative illustrating Maqam's process from first concept to final performance. The suite combined service positioning, behind-the-scenes imagery, and a consistent editorial grid to present the studio as a full creative partner.",
+    coverImage: FOLDER_MEDIA[9]?.[0],
+    gallery: FOLDER_MEDIA[9] ?? [],
+    accentTone: 'oxblood',
+  },
+  {
+    id: 'carousel-child-book-choice',
+    title: 'Guiding Young Readers — Educational Series',
+    client: 'Maqam Studio',
+    category: 'social-brand',
+    subTag: 'Educational Carousel',
+    summary:
+      'A six-slide guide to helping children choose books with curiosity and discernment.',
+    fullStory:
+      "Researched and designed a six-part carousel for International Children's Book Day, offering parents and educators a practical framework for building children's critical reading taste. The series balanced warm illustration with clear, actionable steps.",
+    coverImage: FOLDER_MEDIA[10]?.[0],
+    gallery: FOLDER_MEDIA[10] ?? [],
+    accentTone: 'gold',
+  },
+  {
+    id: 'carousel-world-theatre-day',
+    title: 'World Theatre Day — Impact on Children',
+    client: 'Maqam Studio',
+    category: 'social-brand',
+    subTag: 'Educational Carousel',
+    summary:
+      "A six-slide essay on why theatre matters in a child's development.",
+    fullStory:
+      "Wrote a six-part World Theatre Day series on theatre's role in children's emotional, social, and creative development. The carousel paired classical references with accessible language, positioning Maqam's stage work within a broader cultural argument.",
+    coverImage: FOLDER_MEDIA[11]?.[0],
+    gallery: FOLDER_MEDIA[11] ?? [],
     accentTone: 'crimson',
   },
 
-  // ================= 4. FIELD PRODUCTION & REELS =================
+  // ================= 4. FIELD PRODUCTION & 9:16 REELS =================
   {
     id: 'damascus-book-fair',
     title: 'Damascus International Book Fair',
@@ -315,8 +401,7 @@ export const PROJECTS: ProjectItem[] = [
       'End-to-end media documentation from behind-the-scenes rehearsals to live stage performances.',
     fullStory:
       'Managed the full media lifecycle for Maqam’s participation—documenting everything from behind-the-scenes rehearsals to live stage performances through field photography and professional videography, followed by advanced video editing and post-production to publish engaging cultural content.',
-    coverImage: '/media/reels/reel-1-cover.jpg',
-    videoUrl: '/media/reels/reel-1.mp4',
+    videoUrl: REEL_VIDEOS[0],
     accentTone: 'crimson',
   },
   {
@@ -329,8 +414,7 @@ export const PROJECTS: ProjectItem[] = [
       'Cinematic field documentation of live performances at the historic Damascus Citadel.',
     fullStory:
       'Handled comprehensive visual documentation and field videography for Maqam’s events at the historical Citadel. Covered the entire journey from initial stage preparations and rehearsals to live performances, concluding with editing and publishing dynamic promotional media.',
-    coverImage: '/media/reels/reel-2-cover.jpg',
-    videoUrl: '/media/reels/reel-2.mp4',
+    videoUrl: REEL_VIDEOS[1],
     accentTone: 'terracotta',
   },
   {
@@ -343,8 +427,7 @@ export const PROJECTS: ProjectItem[] = [
       'Vibrant rehearsal-to-stage videography and polished social media broadcast edits.',
     fullStory:
       'Documented Maqam’s special children’s performances and theatrical activities from the rehearsal rooms to the main stage. Captured vibrant on-ground photography and videography, then edited and produced polished visual content ready for digital broadcast and social media publication.',
-    coverImage: '/media/reels/reel-3-cover.jpg',
-    videoUrl: '/media/reels/reel-3.mp4',
+    videoUrl: REEL_VIDEOS[2],
     accentTone: 'gold',
   },
 ];

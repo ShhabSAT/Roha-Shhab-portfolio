@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import * as THREE from 'three';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
@@ -11,31 +11,16 @@ interface CurvedShowcaseProps {
   onSelectProject: (project: ProjectItem) => void;
 }
 
+// The 5 flagship Brand, Visual Direction & Show Promo campaigns (Folders 1, 2, 4, 7, 9)
 const FEATURED_IDS = [
-  'on-his-footsteps',
-  'maqam-growth-strategy',
-  'labeeb-almarai',
-  'damascus-book-fair',
-  'educational-carousels',
-  'sherlock-musical',
-  'syrian-summer-citadel',
-  'visual-photography-design',
-  'cartoon-promo-campaigns',
-  'seasonal-cultural-campaigns',
+  'promo-maimoon-spacetoon',
+  'visual-kingdom-eloquence',
+  'brand-maqam-sixth-year',
+  'promo-behind-every-art',
+  'brand-maqam-project-vision',
 ];
 
-const ROMAN_NUMERALS = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X'];
-
-const TONE_BG: Record<NonNullable<ProjectItem['accentTone']>, string> = {
-  crimson:
-    'radial-gradient(circle at 30% 20%, #7D1B1A 0%, #480B0D 56%, #220405 100%)',
-  terracotta:
-    'radial-gradient(circle at 30% 22%, #963C21 0%, #52180D 56%, #240705 100%)',
-  gold:
-    'radial-gradient(circle at 30% 20%, #826230 0%, #452913 56%, #200D06 100%)',
-  oxblood:
-    'radial-gradient(circle at 30% 22%, #631220 0%, #360710 56%, #1B0307 100%)',
-};
+const ROMAN_NUMERALS = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII'];
 
 const VERTEX_SHADER = `
   uniform float uViewportHalfWidth;
@@ -54,19 +39,19 @@ const VERTEX_SHADER = `
     vec4 worldPos = modelMatrix * vec4(pos, 1.0);
     float nx = worldPos.x / max(uViewportHalfWidth, 0.001);
 
-    // Wide flat central viewing corridor (62% of viewport stays razor-flat)
-    float deadzone = 0.62;
+    // Wide flat central viewing corridor (60% stays razor-flat for 3:4 artwork)
+    float deadzone = 0.60;
     float edge = max(0.0, abs(nx) - deadzone);
 
     // Smooth asymptotic side-edge S-curve
-    float t = clamp(edge / 0.45, 0.0, 1.35);
-    float sCurve = ((t * t) / (1.0 + 0.65 * t)) * sign(nx);
+    float t = clamp(edge / 0.48, 0.0, 1.35);
+    float sCurve = ((t * t) / (1.0 + 0.68 * t)) * sign(nx);
 
     float activeCurve = sCurve * uIntro;
     vCurve = activeCurve;
 
     pos.y += activeCurve * uBendStrength;
-    pos.y += sin(uv.x * 3.14159265) * clamp(uVelocity, -1.1, 1.1) * 0.085;
+    pos.y += sin(uv.x * 3.14159265) * clamp(uVelocity, -1.0, 1.0) * 0.075;
     pos.z -= abs(activeCurve) * uDepthStrength;
 
     gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
@@ -82,7 +67,7 @@ const FRAGMENT_SHADER = `
   varying float vCurve;
 
   void main() {
-    float shift = (abs(vCurve) * 0.009) + (abs(uVelocity) * 0.0055);
+    float shift = (abs(vCurve) * 0.008) + (abs(uVelocity) * 0.005);
     vec2 rUv = clamp(vUv + vec2(shift, 0.0), 0.002, 0.998);
     vec2 gUv = clamp(vUv, 0.002, 0.998);
     vec2 bUv = clamp(vUv - vec2(shift, 0.0), 0.002, 0.998);
@@ -119,7 +104,7 @@ function wrapCanvasText(
   return lines;
 }
 
-function drawManuscriptCard(
+function drawPortraitPlate(
   canvas: HTMLCanvasElement,
   project: ProjectItem,
   roman: string,
@@ -150,95 +135,37 @@ function drawManuscriptCard(
 
     ctx.drawImage(loadedImage, offsetX, offsetY, drawW, drawH);
 
-    const vig = ctx.createLinearGradient(0, h * 0.58, 0, h);
-    vig.addColorStop(0, 'rgba(22, 4, 5, 0)');
-    vig.addColorStop(1, 'rgba(22, 4, 5, 0.68)');
-    ctx.fillStyle = vig;
-    ctx.fillRect(0, 0, w, h);
-
-    ctx.strokeStyle = 'rgba(200, 168, 107, 0.55)';
-    ctx.lineWidth = 2;
-    ctx.strokeRect(20, 20, w - 40, h - 40);
+    // Subtle museum gold hairline framing on real 3:4 artwork
+    ctx.strokeStyle = 'rgba(200, 168, 107, 0.5)';
+    ctx.lineWidth = 3;
+    ctx.strokeRect(10, 10, w - 20, h - 20);
     return;
   }
 
-  const palettes: Record<
-    NonNullable<ProjectItem['accentTone']>,
-    [string, string, string]
-  > = {
-    crimson: ['#7F1C1A', '#4A0C0E', '#240506'],
-    terracotta: ['#9A3E22', '#57190E', '#260806'],
-    gold: ['#846431', '#482B14', '#220E06'],
-    oxblood: ['#661321', '#380811', '#1D0408'],
-  };
-
-  const [c0, c1, c2] = palettes[project.accentTone ?? 'crimson'];
-  const grad = ctx.createRadialGradient(w * 0.28, h * 0.22, 50, w * 0.5, h * 0.5, w * 0.85);
-  grad.addColorStop(0, c0);
-  grad.addColorStop(0.55, c1);
-  grad.addColorStop(1, c2);
+  // Fallback vintage 3:4 playbill plate while image loads
+  const grad = ctx.createRadialGradient(w * 0.3, h * 0.25, 40, w * 0.5, h * 0.5, h * 0.72);
+  grad.addColorStop(0, '#7F1C1A');
+  grad.addColorStop(0.55, '#480B0D');
+  grad.addColorStop(1, '#220405');
   ctx.fillStyle = grad;
   ctx.fillRect(0, 0, w, h);
 
-  ctx.strokeStyle = 'rgba(200, 168, 107, 0.52)';
+  ctx.strokeStyle = 'rgba(200, 168, 107, 0.5)';
   ctx.lineWidth = 2;
-  ctx.strokeRect(26, 26, w - 52, h - 52);
+  ctx.strokeRect(22, 22, w - 44, h - 44);
 
-  ctx.strokeStyle = 'rgba(200, 168, 107, 0.22)';
-  ctx.lineWidth = 1.5;
-  ctx.strokeRect(40, 40, w - 80, h - 80);
-
-  ctx.save();
-  ctx.font = 'italic 300 320px "Cormorant Garamond", Georgia, serif';
-  ctx.fillStyle = 'rgba(239, 229, 209, 0.07)';
-  ctx.textAlign = 'right';
-  ctx.textBaseline = 'middle';
-  ctx.fillText(roman, w - 55, h * 0.54);
-  ctx.restore();
-
-  ctx.font = '500 20px "Plus Jakarta Sans", sans-serif';
+  ctx.font = '500 18px "Plus Jakarta Sans", sans-serif';
   ctx.fillStyle = '#D5B577';
   ctx.textAlign = 'left';
   ctx.textBaseline = 'top';
-  ctx.fillText(`ARCHIVE  ${roman}`, 76, 72);
+  ctx.fillText(`PLATE ${roman}`, 56, 56);
 
-  ctx.textAlign = 'right';
-  ctx.fillText(project.videoUrl ? '▶  FILM REEL' : 'EDITORIAL PLATE', w - 76, 72);
-
-  ctx.fillStyle = 'rgba(200, 168, 107, 0.72)';
-  ctx.fillRect(76, h * 0.34, 72, 2);
-
-  ctx.font = '500 21px "Plus Jakarta Sans", sans-serif';
-  ctx.fillStyle = 'rgba(239, 229, 209, 0.76)';
-  ctx.textAlign = 'left';
-  ctx.fillText(project.client.toUpperCase(), 76, h * 0.38);
-
-  ctx.font = '400 72px "Cormorant Garamond", Georgia, serif';
+  ctx.font = '400 54px "Cormorant Garamond", Georgia, serif';
   ctx.fillStyle = '#F5ECE0';
-  const titleLines = wrapCanvasText(ctx, project.title, w - 190).slice(0, 3);
-  titleLines.forEach((line, idx) => {
-    ctx.fillText(line, 76, h * 0.45 + idx * 80);
+  const lines = wrapCanvasText(ctx, project.title, w - 112).slice(0, 4);
+  lines.forEach((line, i) => {
+    ctx.fillText(line, 56, h * 0.42 + i * 62);
   });
-
-  ctx.strokeStyle = 'rgba(200, 168, 107, 0.3)';
-  ctx.lineWidth = 1.5;
-  ctx.beginPath();
-  ctx.moveTo(76, h - 118);
-  ctx.lineTo(w - 76, h - 118);
-  ctx.stroke();
-
-  ctx.font = '400 20px "Plus Jakarta Sans", sans-serif';
-  ctx.fillStyle = 'rgba(239, 229, 209, 0.78)';
-  ctx.textAlign = 'left';
-  ctx.textBaseline = 'bottom';
-  ctx.fillText(project.subTag.toUpperCase(), 76, h - 68);
-
-  if (project.metrics) {
-    ctx.font = 'italic 400 32px "Cormorant Garamond", Georgia, serif';
-    ctx.fillStyle = '#D5B577';
-    ctx.textAlign = 'right';
-    ctx.fillText(project.metrics, w - 76, h - 64);
-  }
 }
 
 function smoothstep(edge0: number, edge1: number, x: number): number {
@@ -246,101 +173,34 @@ function smoothstep(edge0: number, edge1: number, x: number): number {
   return t * t * (3 - 2 * t);
 }
 
-/**
- * Mobile-only editorial plate. Native snap scrolling replaces the WebGL ribbon
- * on phones so low-end devices never allocate a GPU context or pin the page.
- */
-const MobileShowcasePlate: React.FC<{
-  project: ProjectItem;
-  roman: string;
-  onSelect: () => void;
-}> = ({ project, roman, onSelect }) => {
-  const [imgFailed, setImgFailed] = useState(false);
-  const showImage = Boolean(project.coverImage) && !imgFailed;
-
-  return (
-    <button
-      type="button"
-      onClick={onSelect}
-      data-cursor="view"
-      aria-label={`Inspect ${project.title}`}
-      className="group shrink-0 snap-center w-[78vw] max-w-[340px] text-left"
-    >
-      <div className="relative aspect-[4/5] overflow-hidden bg-crimson-canvas border border-[#C8A86B]/40">
-        {showImage ? (
-          <>
-            <img
-              src={project.coverImage}
-              alt={project.title}
-              draggable={false}
-              onError={() => setImgFailed(true)}
-              className="absolute inset-0 h-full w-full object-cover"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-[#160304] via-[#160304]/30 to-[#160304]/45" />
-          </>
-        ) : (
-          <div
-            className="absolute inset-0"
-            style={{ background: TONE_BG[project.accentTone ?? 'crimson'] }}
-          >
-            <div className="absolute inset-3 border border-[#C8A86B]/25" />
-            <div className="absolute inset-5 border border-[#C8A86B]/10" />
-            <span className="absolute right-4 top-1/2 -translate-y-1/2 font-serif-editorial italic text-[120px] leading-none text-[#EFE5D1]/[0.07]">
-              {roman}
-            </span>
-          </div>
-        )}
-
-        <div className="absolute inset-x-0 top-0 flex items-center justify-between gap-3 p-4 text-[9px] tracking-[0.24em] uppercase text-[#C8A86B]">
-          <span>PLATE {roman}</span>
-          <span className="truncate text-[#EFE5D1]/60">{project.subTag}</span>
-        </div>
-
-        <div className="absolute inset-x-0 bottom-0 p-5">
-          <p className="text-[9px] tracking-[0.22em] uppercase text-[#C8A86B]">
-            {project.client}
-          </p>
-          <h3 className="mt-1.5 font-serif-editorial text-2xl leading-tight text-[#EFE5D1]">
-            {project.title}
-          </h3>
-          <div className="mt-4 flex items-center justify-between border-t border-[#C8A86B]/25 pt-3 text-[9px] tracking-[0.2em] uppercase text-[#C8A86B]">
-            <span>TAP TO INSPECT</span>
-            <span className="transition-transform duration-300 group-hover:translate-x-1">
-              →
-            </span>
-          </div>
-        </div>
-      </div>
-    </button>
-  );
-};
-
 export const CurvedShowcase: React.FC<CurvedShowcaseProps> = ({
   onSelectProject,
 }) => {
-  const featuredProjects = FEATURED_IDS.map((id) =>
-    PROJECTS.find((p) => p.id === id)
-  ).filter((p): p is ProjectItem => Boolean(p));
+  const featuredProjects = useMemo(() => {
+    const picked = FEATURED_IDS.map((id) =>
+      PROJECTS.find((p) => p.id === id)
+    ).filter((p): p is ProjectItem => Boolean(p));
+    return picked.length > 0 ? picked : PROJECTS.slice(0, 10);
+  }, []);
 
   const sectionRef = useRef<HTMLElement | null>(null);
   const canvasHostRef = useRef<HTMLDivElement | null>(null);
   const [activeIndex, setActiveIndex] = useState(0);
   const [isHoveringCard, setIsHoveringCard] = useState(false);
-  const [isMobile, setIsMobile] = useState(
-    () => typeof window !== 'undefined' && window.innerWidth < 768
+  const [isMobile, setIsMobile] = useState(() =>
+    typeof window !== 'undefined' ? window.innerWidth < 768 : false
   );
-
-  // Phones get a native touch gallery; tablets & laptops keep the WebGL ribbon.
-  useEffect(() => {
-    const query = window.matchMedia('(max-width: 767px)');
-    const sync = () => setIsMobile(query.matches);
-    sync();
-    query.addEventListener('change', sync);
-    return () => query.removeEventListener('change', sync);
-  }, []);
 
   const onSelectRef = useRef(onSelectProject);
   onSelectRef.current = onSelectProject;
+
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 767px)');
+    const onChange = () => setIsMobile(mq.matches);
+    onChange();
+    mq.addEventListener('change', onChange);
+    return () => mq.removeEventListener('change', onChange);
+  }, []);
 
   useEffect(() => {
     if (isMobile) return;
@@ -350,7 +210,7 @@ export const CurvedShowcase: React.FC<CurvedShowcaseProps> = ({
 
     let disposed = false;
     let rafId = 0;
-    let running = false;
+    let isVisible = false;
 
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(40, 1, 0.1, 100);
@@ -361,7 +221,8 @@ export const CurvedShowcase: React.FC<CurvedShowcaseProps> = ({
       alpha: true,
       powerPreference: 'high-performance',
     });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    // Capping DPR at 1.5 cuts GPU fragment fill-rate by ~44% with razor-sharp visuals
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     host.appendChild(renderer.domElement);
 
@@ -370,32 +231,36 @@ export const CurvedShowcase: React.FC<CurvedShowcaseProps> = ({
     const loadedImages: (HTMLImageElement | null)[] = featuredProjects.map(() => null);
     const meshes: THREE.Mesh<THREE.PlaneGeometry, THREE.ShaderMaterial>[] = [];
 
-    const baseGeom = new THREE.PlaneGeometry(1, 1, 52, 28);
+    // 3:4 Portrait segmented mesh for silky vertex curvature
+    const baseGeom = new THREE.PlaneGeometry(1, 1, 36, 28);
 
     featuredProjects.forEach((project, idx) => {
       const c = document.createElement('canvas');
-      c.width = 1280;
-      c.height = 820;
-      drawManuscriptCard(c, project, ROMAN_NUMERALS[idx] ?? String(idx + 1), null);
+      c.width = 720;
+      c.height = 960; // Exact 3:4 Portrait ratio
+      drawPortraitPlate(c, project, ROMAN_NUMERALS[idx] ?? String(idx + 1), null);
       canvases.push(c);
 
       const tex = new THREE.CanvasTexture(c);
       tex.colorSpace = THREE.SRGBColorSpace;
       tex.minFilter = THREE.LinearFilter;
       tex.magFilter = THREE.LinearFilter;
-      tex.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
+      tex.generateMipmaps = false;
       textures.push(tex);
 
-      if (project.coverImage) {
+      const coverSrc = project.coverImage || project.gallery?.[0];
+      if (coverSrc) {
         const img = new Image();
+        img.decoding = 'async';
         img.crossOrigin = 'anonymous';
         img.onload = () => {
           if (disposed) return;
           loadedImages[idx] = img;
-          drawManuscriptCard(c, project, ROMAN_NUMERALS[idx] ?? String(idx + 1), img);
+          drawPortraitPlate(c, project, ROMAN_NUMERALS[idx] ?? String(idx + 1), img);
           tex.needsUpdate = true;
+          if (!isVisible) renderer.render(scene, camera);
         };
-        img.src = project.coverImage;
+        img.src = coverSrc;
       }
 
       const mat = new THREE.ShaderMaterial({
@@ -405,10 +270,10 @@ export const CurvedShowcase: React.FC<CurvedShowcaseProps> = ({
         uniforms: {
           uTexture: { value: tex },
           uViewportHalfWidth: { value: 6 },
-          uBendStrength: { value: 1.4 },
-          uDepthStrength: { value: 0.65 },
+          uBendStrength: { value: 1.45 },
+          uDepthStrength: { value: 0.6 },
           uVelocity: { value: 0 },
-          uIntro: { value: 0.5 },
+          uIntro: { value: 0.6 },
           uOpacity: { value: 1 },
         },
       });
@@ -419,30 +284,17 @@ export const CurvedShowcase: React.FC<CurvedShowcaseProps> = ({
       meshes.push(mesh);
     });
 
-    if (document.fonts && document.fonts.ready) {
-      document.fonts.ready.then(() => {
-        if (disposed) return;
-        featuredProjects.forEach((project, idx) => {
-          drawManuscriptCard(
-            canvases[idx],
-            project,
-            ROMAN_NUMERALS[idx] ?? String(idx + 1),
-            loadedImages[idx]
-          );
-          textures[idx].needsUpdate = true;
-        });
-      });
-    }
-
     let viewWidth = 10;
     let viewHeight = 6;
-    let cardWidth = 4.5;
-    let cardHeight = 2.88;
-    let step = 4.78;
+    let cardWidth = 3.2;
+    let cardHeight = 4.26;
+    let step = 3.52;
+    let cachedVh = window.innerHeight || 800;
 
     const handleResize = () => {
       const w = host.clientWidth || window.innerWidth;
-      const h = host.clientHeight || window.innerHeight * 0.65;
+      const h = host.clientHeight || window.innerHeight * 0.64;
+      cachedVh = window.innerHeight || 800;
       renderer.setSize(w, h);
       camera.aspect = w / h;
       camera.updateProjectionMatrix();
@@ -451,30 +303,29 @@ export const CurvedShowcase: React.FC<CurvedShowcaseProps> = ({
       viewHeight = 2 * Math.tan(vFov / 2) * camera.position.z;
       viewWidth = viewHeight * camera.aspect;
 
-      const isMobile = w < 768;
-      cardWidth = isMobile
-        ? Math.min(viewWidth * 0.78, 4.3)
-        : Math.min(viewWidth * 0.44, viewHeight * 0.84 * 1.56);
-      cardHeight = cardWidth / 1.56;
-      step = cardWidth * (isMobile ? 1.08 : 1.06);
+      // Exact 3:4 Portrait card sizing filling ~78% of stage height cleanly
+      cardHeight = Math.min(viewHeight * 0.78, viewWidth * 0.42);
+      cardWidth = cardHeight * 0.75;
+      step = cardWidth * 1.14;
 
       meshes.forEach((m) => {
         m.material.uniforms.uViewportHalfWidth.value = viewWidth * 0.5;
-        m.material.uniforms.uBendStrength.value = isMobile
-          ? viewHeight * 0.19
-          : viewHeight * 0.27;
-        m.material.uniforms.uDepthStrength.value = isMobile ? 0.35 : 0.65;
+        m.material.uniforms.uBendStrength.value = viewHeight * 0.24;
+        m.material.uniforms.uDepthStrength.value = 0.6;
       });
     };
 
     handleResize();
     window.addEventListener('resize', handleResize);
 
-    const pixelsPerCard = 340;
+    // Pre-compile GLSL shaders & upload initial GPU textures NOW during preloader -> ZERO transition hitch!
+    renderer.compile(scene, camera);
+    renderer.render(scene, camera);
+
+    const pixelsPerCard = 290;
     const maxIndex = Math.max(1, featuredProjects.length - 1);
     const pinDistance = maxIndex * pixelsPerCard;
 
-    // Pin ONLY for the core gallery transit; motion itself runs across a wider continuous envelope
     const st = ScrollTrigger.create({
       trigger: section,
       start: 'top top',
@@ -518,33 +369,30 @@ export const CurvedShowcase: React.FC<CurvedShowcaseProps> = ({
     renderer.domElement.addEventListener('click', onClick);
 
     const state = {
-      smoothCardFloat: -0.75,
+      smoothCardFloat: -0.65,
       velocity: 0,
       lastReportedIndex: 0,
       initialized: false,
     };
 
     const animate = () => {
-      if (disposed || !running) return;
+      if (disposed || !isVisible) {
+        rafId = 0;
+        return;
+      }
 
-      const vh = window.innerHeight || 800;
-      const leadInPx = vh * 0.48; // Starts gliding BEFORE section fills the full screen
-      const leadOutPx = vh * 0.68; // Continues gliding smoothly AFTER unpin while scrolling down
-
+      const leadInPx = cachedVh * 0.45;
+      const leadOutPx = cachedVh * 0.65;
       const relScroll = window.scrollY - st.start;
 
-      // Compute continuous target card position across Lead-In -> Pinned -> Lead-Out
       let targetCardFloat = 0;
       if (relScroll < 0) {
-        // Pre-pin smooth approach: card 1 glides in from slightly right as section rises
         const preT = Math.max(0, Math.min(1, (relScroll + leadInPx) / leadInPx));
         const easedPre = preT * preT * (3 - 2 * preT);
-        targetCardFloat = -0.78 * (1 - easedPre);
+        targetCardFloat = -0.68 * (1 - easedPre);
       } else if (relScroll <= pinDistance) {
-        // Pinned core: silky 1:1 progression across all cards
         targetCardFloat = relScroll / pixelsPerCard;
       } else {
-        // Post-pin smooth exit: ribbon keeps gliding & curving gently left as next section rises
         const postT = Math.max(0, Math.min(1, (relScroll - pinDistance) / leadOutPx));
         const easedPost = 1 - Math.pow(1 - postT, 2.2);
         targetCardFloat = maxIndex + easedPost * 0.95;
@@ -556,17 +404,15 @@ export const CurvedShowcase: React.FC<CurvedShowcaseProps> = ({
       }
 
       const prevFloat = state.smoothCardFloat;
-      state.smoothCardFloat += (targetCardFloat - state.smoothCardFloat) * 0.095;
-      const rawVel = (state.smoothCardFloat - prevFloat) * 16;
-      state.velocity += (rawVel - state.velocity) * 0.14;
+      state.smoothCardFloat += (targetCardFloat - state.smoothCardFloat) * 0.1;
+      const rawVel = (state.smoothCardFloat - prevFloat) * 14;
+      state.velocity += (rawVel - state.velocity) * 0.15;
 
-      // Intro ribbon bend ramps up smoothly during lead-in so it's fully alive on arrival
-      const introT = smoothstep(-0.75, 0.05, state.smoothCardFloat);
-      // Soft exit opacity fade only at the very end of the post-pin scroll
-      const exitFade = 1 - smoothstep(maxIndex + 0.35, maxIndex + 0.95, state.smoothCardFloat) * 0.35;
+      const introT = smoothstep(-0.68, 0.05, state.smoothCardFloat);
+      const exitFade =
+        1 - smoothstep(maxIndex + 0.35, maxIndex + 0.95, state.smoothCardFloat) * 0.32;
 
       const trackX = -state.smoothCardFloat * step;
-
       let closestIdx = 0;
       let closestDist = Infinity;
 
@@ -578,7 +424,11 @@ export const CurvedShowcase: React.FC<CurvedShowcaseProps> = ({
           closestIdx = idx;
         }
 
-        const scaleLift = 0.94 + introT * 0.06;
+        // Cull far off-screen cards to save vertex shading
+        mesh.visible = distFromCenter < viewWidth * 1.15;
+        if (!mesh.visible) return;
+
+        const scaleLift = 0.95 + introT * 0.05;
         mesh.position.set(x, 0, 0);
         mesh.scale.set(cardWidth * scaleLift, cardHeight * scaleLift, 1);
 
@@ -596,35 +446,24 @@ export const CurvedShowcase: React.FC<CurvedShowcaseProps> = ({
       rafId = requestAnimationFrame(animate);
     };
 
-    // GPU discipline: only run the ribbon when the stage is near the viewport.
-    const startLoop = () => {
-      if (disposed || running) return;
-      running = true;
-      rafId = requestAnimationFrame(animate);
-    };
-
-    const stopLoop = () => {
-      running = false;
-      if (rafId) cancelAnimationFrame(rafId);
-      rafId = 0;
-    };
-
-    const visibility = new IntersectionObserver(
-      (entries) => {
-        if (entries[0]?.isIntersecting) startLoop();
-        else stopLoop();
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        isVisible = entry.isIntersecting;
+        if (isVisible && !rafId && !disposed) {
+          rafId = requestAnimationFrame(animate);
+        }
       },
-      { rootMargin: '350px 0px' }
+      { rootMargin: '400px 0px' }
     );
-    visibility.observe(section);
+    observer.observe(section);
 
     const refreshTimer = window.setTimeout(() => ScrollTrigger.refresh(), 140);
 
     return () => {
       disposed = true;
       window.clearTimeout(refreshTimer);
-      visibility.disconnect();
-      stopLoop();
+      observer.disconnect();
+      if (rafId) cancelAnimationFrame(rafId);
       window.removeEventListener('resize', handleResize);
       renderer.domElement.removeEventListener('pointermove', onPointerMove);
       renderer.domElement.removeEventListener('pointerleave', onPointerLeave);
@@ -638,83 +477,86 @@ export const CurvedShowcase: React.FC<CurvedShowcaseProps> = ({
         host.removeChild(renderer.domElement);
       }
     };
-  }, [featuredProjects.length, isMobile]);
+  }, [featuredProjects, isMobile]);
 
   const activeProject = featuredProjects[activeIndex] ?? featuredProjects[0];
 
-  /* ---------------------------------- MOBILE ---------------------------------- */
-  /* No WebGL context, no pin, no RAF: a native velvet snap-gallery instead.      */
+  // Dedicated silky 3:4 Portrait Swipe Gallery on Mobile (< 768px)
   if (isMobile) {
     return (
       <section
         id="showcase"
-        ref={sectionRef}
-        className="bg-crimson-canvas relative w-full pt-24 pb-14 border-t border-[#C8A86B]/20 overflow-hidden"
+        className="bg-crimson-canvas relative w-full py-20 overflow-hidden border-t border-[#C8A86B]/20"
       >
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-0 z-0 opacity-[0.12] mix-blend-normal"
-          style={{
-            backgroundImage: "url('/media/bg-tapestry.webp')",
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-          }}
-        />
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-0 z-0"
-          style={{
-            background:
-              'radial-gradient(ellipse 80% 60% at 50% 42%, transparent 22%, rgba(22, 3, 4, 0.88) 100%)',
-          }}
-        />
-
-        <div className="relative z-10 px-6">
+        <div className="px-6 mb-8">
           <div className="flex items-center gap-3 text-[10px] tracking-[0.24em] uppercase text-[#C8A86B] mb-2">
-            <span>02 / FEATURED SHOWCASE</span>
+            <span>02 / FEATURED CAMPAIGNS</span>
             <span className="w-6 h-[1px] bg-[#C8A86B]/50" />
+            <span className="text-[#EFE5D1]/65">SWIPE →</span>
           </div>
-          <h2 className="font-serif-editorial text-3xl sm:text-4xl leading-none font-light text-[#EFE5D1]">
-            Curated <span className="italic text-[#C8A86B]">Visual</span> Archive
+          <h2 className="font-serif-editorial text-4xl leading-none font-light text-[#EFE5D1]">
+            Brand &amp; <span className="italic text-[#C8A86B]">Visual</span> Campaigns
           </h2>
-
-          <div className="mt-6 flex items-center justify-between text-[9px] tracking-[0.24em] uppercase text-[#EFE5D1]/60">
-            <span className="text-[#C8A86B]">SWIPE →</span>
-            <span>{String(featuredProjects.length).padStart(2, '0')} PLATES</span>
-          </div>
         </div>
 
-        <div className="scrollbar-hide relative z-10 mt-3 flex snap-x snap-mandatory gap-4 overflow-x-auto px-6 pb-4">
-          {featuredProjects.map((project, idx) => (
-            <MobileShowcasePlate
-              key={project.id}
-              project={project}
-              roman={ROMAN_NUMERALS[idx] ?? String(idx + 1)}
-              onSelect={() => onSelectProject(project)}
-            />
-          ))}
-        </div>
-
-        <div className="relative z-10 mt-4 px-6 text-[9px] tracking-[0.22em] uppercase text-[#EFE5D1]/45">
-          TAP ANY PLATE TO OPEN THE DOSSIER
+        <div className="flex gap-4 overflow-x-auto snap-x snap-mandatory px-6 pb-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          {featuredProjects.map((project, idx) => {
+            const cover = project.coverImage || project.gallery?.[0];
+            return (
+              <button
+                key={project.id}
+                type="button"
+                onClick={() => onSelectProject(project)}
+                className="snap-center shrink-0 w-[76vw] max-w-[300px] text-left bg-[#220405] border border-[#C8A86B]/40 overflow-hidden"
+              >
+                <div className="aspect-[3/4] w-full relative overflow-hidden bg-[#2A0608]">
+                  {cover ? (
+                    <img
+                      src={cover}
+                      alt={project.title}
+                      loading="lazy"
+                      decoding="async"
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full p-5 flex flex-col justify-between">
+                      <span className="text-[10px] tracking-[0.2em] text-[#C8A86B]">
+                        PLATE {ROMAN_NUMERALS[idx] ?? idx + 1}
+                      </span>
+                      <span className="font-serif-editorial text-2xl text-[#EFE5D1]">
+                        {project.title}
+                      </span>
+                    </div>
+                  )}
+                </div>
+                <div className="p-4 border-t border-[#C8A86B]/20">
+                  <p className="text-[9px] tracking-[0.2em] uppercase text-[#C8A86B] mb-1">
+                    {project.subTag}
+                  </p>
+                  <p className="font-serif-editorial text-xl text-[#EFE5D1] leading-snug">
+                    {project.title}
+                  </p>
+                </div>
+              </button>
+            );
+          })}
         </div>
       </section>
     );
   }
 
-  /* ---------------------------------- DESKTOP --------------------------------- */
   return (
     <section
       id="showcase"
       ref={sectionRef}
       className="bg-crimson-canvas relative w-full h-screen flex flex-col justify-between pt-24 pb-8 overflow-hidden border-t border-[#C8A86B]/20"
     >
-      {/* Classical Crimson Tapestry Weave Layer — pre-graded, normal blend on mobile */}
+      {/* Pre-baked lightweight Tapestry Weave Layer */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-0 z-0 opacity-[0.12] mix-blend-normal md:mix-blend-soft-light"
+        className="pointer-events-none absolute inset-0 z-0 opacity-[0.11]"
         style={{
-          backgroundImage: "url('/media/bg-tapestry.webp')",
+          backgroundImage: "url('/media/bg-tapestry.webp'), url('/media/bg-tapestry.jpg')",
           backgroundSize: 'cover',
           backgroundPosition: 'center',
         }}
@@ -732,12 +574,12 @@ export const CurvedShowcase: React.FC<CurvedShowcaseProps> = ({
       <div className="max-w-[1440px] w-full mx-auto px-6 md:px-14 flex items-end justify-between relative z-20 pointer-events-none">
         <div>
           <div className="flex items-center gap-3 text-[10px] md:text-[11px] tracking-[0.24em] uppercase text-[#C8A86B] mb-2">
-            <span>02 / FEATURED SHOWCASE</span>
+            <span>02 / FEATURED CAMPAIGNS</span>
             <span className="w-8 h-[1px] bg-[#C8A86B]/50" />
             <span className="text-[#EFE5D1]/65">SCROLL TO NAVIGATE</span>
           </div>
           <h2 className="font-serif-editorial text-3xl sm:text-4xl md:text-5xl leading-none font-light text-[#EFE5D1]">
-            Curated <span className="italic text-[#C8A86B]">Visual</span> Archive
+            Brand &amp; <span className="italic text-[#C8A86B]">Visual</span> Campaigns
           </h2>
         </div>
 
@@ -746,14 +588,14 @@ export const CurvedShowcase: React.FC<CurvedShowcaseProps> = ({
         </div>
       </div>
 
-      {/* Full-Width WebGL Curved Ribbon Stage */}
+      {/* Full-Width WebGL 3:4 Portrait Curved Ribbon Stage */}
       <div
         ref={canvasHostRef}
         data-cursor={isHoveringCard ? 'view' : undefined}
-        className="relative flex-1 w-full min-h-[340px] z-10"
+        className="relative flex-1 w-full min-h-[360px] z-10"
       />
 
-      {/* Bottom Centered Active Project Caption */}
+      {/* Bottom Active Project Caption */}
       {activeProject && (
         <div className="max-w-[1440px] w-full mx-auto px-6 md:px-14 relative z-20">
           <div className="border-t border-[#C8A86B]/20 pt-5 flex flex-col sm:flex-row items-center justify-between gap-4">
