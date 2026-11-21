@@ -1,0 +1,136 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --crimson-shadow: #1B0405;
+  --crimson-velvet: #3E090B;
+  --crimson-glow: #611211;
+  --parchment-light: #EFE5D1;
+  --parchment-warm: #E2D3B7;
+  --ink-dark: #1E0707;
+  --terracotta: #9E4224;
+  --gold-antique: #C8A86B;
+  --border-hairline: rgba(200, 168, 107, 0.20);
+
+  /* Backwards compatibility variables */
+  --bg-void: #1B0405;
+  --bg-surface: #260608;
+  --bg-burgundy: #3E090B;
+  --text-ivory: #EFE5D1;
+  --text-muted: #B3A093;
+}
+
+::selection {
+  background-color: #C8A86B;
+  color: #1E0707;
+}
+
+::-moz-selection {
+  background-color: #C8A86B;
+  color: #1E0707;
+}
+
+html,
+body {
+  /* clip (not hidden) so position: sticky keeps working inside sections */
+  overflow-x: clip;
+}
+
+body {
+  background-color: #2D0608;
+  color: #EFE5D1;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  margin: 0;
+  padding: 0;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Editorial utility classes */
+.font-serif-editorial {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+}
+
+/* Hide the native cursor only while the custom editorial cursor is active on desktop */
+html.custom-cursor-active,
+html.custom-cursor-active * {
+  cursor: none !important;
+}
+
+.editorial-hairline {
+  border: 1px solid rgba(200, 168, 107, 0.20);
+}
+
+/* Painterly multi-layered Crimson Canvas (pure GPU radial gradient — no live SVG filters) */
+.bg-crimson-canvas {
+  position: relative;
+  background: radial-gradient(ellipse 80% 65% at 50% 35%, #5C1110 0%, #3A080A 48%, #1C0304 100%);
+  background-color: #3E090B;
+}
+
+/* Warm Aged Parchment Paper Section */
+.bg-parchment-paper {
+  position: relative;
+  background: radial-gradient(circle at 50% 20%, #F4ECDC 0%, #EAE0CA 65%, #DFD1B5 100%);
+  background-color: #EFE5D1;
+  color: #1E0707;
+}
+
+.bg-parchment-paper::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.08;
+  mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='paperGrain'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.04' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23paperGrain)'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  z-index: 1;
+}
+
+/* Infinite Marquee Animation */
+@keyframes marquee-scroll {
+  0% {
+    transform: translateX(0%);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-marquee {
+  display: flex;
+  width: max-content;
+  animation: marquee-scroll 28s linear infinite;
+}
+
+.animate-marquee:hover {
+  animation-play-state: paused;
+}
+
+/* Subtle full-screen fixed grain overlay.
+   The tile is generated once into a 128×128 PNG at runtime (desktop only),
+   so the compositor paints a plain repeating bitmap — zero filter cost. */
+.film-grain-overlay {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  opacity: 0.032;
+  pointer-events: none;
+  z-index: 9999;
+  background-repeat: repeat;
+}
+
+/* Native horizontal galleries — invisible scrollbar, still swipeable */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}
